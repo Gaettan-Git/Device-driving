@@ -7,11 +7,15 @@ Kadwalon Lobet, Guillaume de Maricourt.
 Project is around a low consumption control card, the Apollo 4 model.
 This card is being use in order to record populations of birds 
 
-==Devices we are working with
+== Objective
+The problematic is around the energy consumption of the card
+We are trying a method from the project EARLYBIRD https://
+
+== Devices used
 In order to work with the Apollo card, multiple devices were used:
 
 * A TENMA progammable power supply, capable of providing level of voltage required for the card, see ''Emulator/PVEmu.py''
-** Code are in majority from link:https://github.com/mbriday/PVEmu/tree/main
+** Code are in majority from https://github.com/mbriday/PVEmu/tree/main
 * The amperemeter included in the Power Profiler Kit 2 from Nordic, see ''Emulator/PPKemu.py''
 * A Keysight Oscilloscope
 
