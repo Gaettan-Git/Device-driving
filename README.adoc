@@ -1,0 +1,26 @@
+:toc:
+
+= Documentation
+Kadwalon Lobet, Guillaume de Maricourt.
+
+== Project description
+Project is around a low consumption control card, the Apollo 4 model.
+This card is being use in order to record populations of birds 
+
+== Project guidelines
+
+In order to submit modification, you will need to submit pull requests and wait for approval. +
+Submitted content must follow the architecture.
+
+When submitting a pull request, ensure that:
+
+* All CAO files __(either modeling or pcb)__ are up-to-date, especially for modeling:
+** Print files ``.stl or .3mf``
+** Project files ``.f3z or .f3d``
+* Code is formatted correctyly using ``uncrustify`` see this link:../code/setup.adoc[document] to setup.
+* Ensure that your branch is aligned with main (``git fetch | git rebase origin main``)
+* Commits follow link:https://hal.science/hal-04663862v1
+* Components datasheets are up-to-date and stored according to PCB project name.
+
+NOTE: ``docs/old`` folder is the first draft of a calibration tools. Goals was to assess impact of anemometer relative angle compared to wind plane. This project has been on hold since teachers wanted to make the actual anemometer and not rely on the industrial one. +
+However those documents could be useful in the future and hence are kept.
