@@ -1,1 +1,0 @@
-All code from https://github.com/BatoSEC25-ECN/girouette/tree/gdm_test_acquire/code/measure_tool
