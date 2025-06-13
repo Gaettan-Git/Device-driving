@@ -9,7 +9,7 @@ This card is being use in order to record populations of birds
 
 == Objective
 The problematic is around the energy consumption of the card
-We are trying a method from the project EARLYBIRD https://
+We are trying a method from the project EARLYBIRD https://hal.science/hal-04663862v1
 
 == Devices used
 In order to work with the Apollo card, multiple devices were used:
