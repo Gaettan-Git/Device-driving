@@ -227,9 +227,6 @@ class OSCI:
         except KeyboardInterrupt:
             self.release()
     
-    def run(self):
-        self.com.write(":RUN")
-        
     def release(self):
         self.com.close()
         
