@@ -3,7 +3,7 @@ Few examples of what we can do with the devices use
 in optic of the EARLYBIRD research project : https://hal.science/hal-04663862v1
 """
 
-from Emulator import PVEmu,PPKemu
+from Emulator import PVEmu,PPKemu,OSCIemu
 import time
 from matplotlib import pyplot as plt
 
@@ -34,7 +34,7 @@ print("1 : set a precise voltage and current to TENMA Power supply")
 print("2 : progressive voltage for TENMA")
 print("3 : progressive voltage, with Nordic PPK2 amperemeter")
 print("3res : progressive voltage, PPK2 amperemeter, with a precise resistance")
-
+print("4 : test on a oscilloscope")
 choix = input("What are we doing ? ")
 
 #__________________________#
@@ -128,7 +128,17 @@ if choix=='3res':
     ppk.stop()
     with_amp=True
     showlogs()
-    
+
+#________________________________#
+if choix=='4':
+    osci = OSCIemu.OSCI()
+    osci.connectToDevice()
+    osci.setup()
+    osci.set_channel(1,{"number":1,"name":"albert","probe_ratio":1,"vertical_scale":1,"vertical_unit_name":"V","offset":1,"offset_unit_name":"V","display":"ON"})
+    osci.run()
+    osci.collect()
+    print(osci.waveforms)
+
 elif choix=='debug':
     ppk = PPKemu.PPK() 
     ppk.connectToDevice()
