@@ -1,8 +1,5 @@
-= Documentation
-Kadwalon Lobet, Guillaume de Maricourt.
-
 == Project description
-Project is around a low consumption control card, the Apollo 4 model.
+The project is around a low consumption control card, the Apollo 4 from Ambiq.
 This card is being use in order to record populations of birds 
 
 == Objective
@@ -25,4 +22,4 @@ There is two main file
 
 note that the emulator should be working with boths
 
-NOTE: Emulators done, main file is to profile according to needs of the project
+NOTE: Emulators done, main file is to profile according to needs of the project => testing with the differant componants of the card
