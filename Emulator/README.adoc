@@ -1,5 +1,3 @@
 == INFO
 All the emulators i code for the differants device i quoted in the main README.
 Normally work with or without the tkinter UI, via the argument UI of the class.
-
-NOTE : The OSCIemu work if the oscillator connect in /dev/usbtmcX
