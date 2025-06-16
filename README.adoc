@@ -9,7 +9,7 @@ This card is being use in order to record populations of birds
 
 == Objective
 The problematic is around the energy consumption of the card
-We are trying a method from the project EARLYBIRD https://
+We are trying a method from the project EARLYBIRD https://hal.science/hal-04663862v1
 
 == Devices used
 In order to work with the Apollo card, multiple devices were used:
@@ -21,8 +21,10 @@ In order to work with the Apollo card, multiple devices were used:
 
 == Main files
 There is two main file
+
 * ''Main.py'' a simpler version to show how emulators are used
 * ''Main_UI.py'' an more "advanced" version with a user interface
+
 note that the emulator should be working with boths
 
 NOTE: Emulators done, main file is to profile according to needs of the project
