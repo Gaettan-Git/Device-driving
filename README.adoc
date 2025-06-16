@@ -1,5 +1,3 @@
-:toc:
-
 = Documentation
 Kadwalon Lobet, Guillaume de Maricourt.
 
