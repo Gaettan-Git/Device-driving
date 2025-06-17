@@ -120,7 +120,7 @@ class PV:
         else:
             self.com.write('OUT0\n')
 
-    def setLogInterval(self,duration):
+    def set_log_interval(self,duration):
         """ define the duration between 2 logs
         If the duration is too low, the thread witll go as fast as possible.
         """
@@ -146,16 +146,14 @@ class PV:
 
     def mainLoop(self):
         startDate = time.time()
-        deadline = startDate+self.logInterval
         while self.run:
-            #periodicity
-            time.sleep(max(0,deadline-time.time()))
-            deadline += self.logInterval
             #measure
             (Vcur,Icur) = self.getOperatingPoint()
             #log
             with self.dataLock:
                 self.log.append((time.time()-startDate,Vcur,Icur,self.voltageSetpoint,self.currentSetpoint))
+            #periodicity
+            time.sleep(self.logInterval)
         #closing…
         stopDate=time.time()
         self.duration = stopDate-startDate

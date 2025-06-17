@@ -3,11 +3,13 @@
 
 import pyvisa
 import sys
+import threading
 import os
 import time
 import csv
 from tkinter import messagebox
 from decimal import Decimal
+
 
 class Scale:
     """Act as a scale referance, for differant unit"""
@@ -39,8 +41,11 @@ class OSCI:
         self.config = Config()
         self.scale = Scale()
         self.waveforms = {}
+        self.mainThread = None
+        self.logInterval = 1
+        self.run = False
         self.ui = UI
-    
+        
     def float_to_nr3(self,number:float) -> str:
         """Convert float to scientific notation (NR3 format)."""
         return f"{Decimal(number):.1E}"
@@ -57,7 +62,7 @@ class OSCI:
             if self.ui:
                 messagebox.showinfo(title='Successfully connected',message="Found oscilloscope")
             else:
-                print("Found oscilloscope")
+                print("Found oscilloscope :",self._get())
         except:
             if self.ui:
                 messagebox.showerror(title='Connection problem',message="Error occured while attempting connect to device")
@@ -160,7 +165,6 @@ class OSCI:
         try:
             self._write(":WAVeform:FORMat ASCII")
             self._write(":WAVeform:POINts:MODE MAXimum")
-
             # Calculate the number of points based on the horizontal scale and required frequency
             time_range = (
                 10 * self.config.timescale[0] * self.scale.time[self.config.timescale[1]]
@@ -168,7 +172,7 @@ class OSCI:
             freq = self.config.frequency[0] * self.scale.frequency[self.config.frequency[1]]
             num_points = int(time_range * freq)
             self._write(f":WAVeform:POINts {num_points}")
-
+            
             self._get("*OPC?")
             self._write(":SINGLE")
 
@@ -191,6 +195,9 @@ class OSCI:
     def set_channel(self,number:int,param:dict):
         self.config.channels[number-1] = param
         self._setup_channels()
+    
+    def set_log_interval(self,n):
+        self.logInterval = n
         
     def set_trigger_parameter(self,setname:str,setvalue):
         """
@@ -224,11 +231,56 @@ class OSCI:
                 except Exception as e:
                     self.waveforms[ch['name']] = []
 
+            for key in self.waveforms:
+                if self.waveforms[key] != []: 
+                    min_len = len(self.waveforms[key])
+                    sampling_duration = (
+                        self.config.timescale[0] * self.scale.time[self.config.timescale[1]]
+                    )
+                    time_increment = sampling_duration / min_len
+                    self.waveforms['time'] = []
+                    
+                    for i in range(min_len):
+                        time_stamp = i * time_increment
+                        self.waveforms['time'].append(time_stamp)
+                    return ''
+                
+            sys.exit("No data to save")
+                
         except KeyboardInterrupt:
             self.release()
-    
+
     def release(self):
         self.com.close()
+    
+    def start(self):
+        if self.mainThread:
+            sys.stderr.write('ERROR: power supply already started!')
+        else:
+            # run
+            self.mainThread = threading.Thread(target=self.mainLoop)
+            for ch in self.config.channels:
+                self.waveforms[ch['name']] = []
+            self.waveforms['time'] = []
+            self.run = True
+            self.mainThread.start()
+
+    def stop(self):
+        self.run = False
+
+    def mainLoop(self):
+        startDate = time.time()
+        while self.run:
+            #measure
+            for ch in self.config.channels:
+                if ch['display'] == 'ON':
+                    self.waveforms[ch['name']].append(float(self._get(":MEASure:VMAX?")))
+            self.waveforms['time'].append(time.time()-startDate)
+            #periodicity
+            time.sleep(self.logInterval)
+        #closing…
+        self.release()
+        self.mainThread = None
         
 if __name__ == '__main__':  # For debug purpose, wont execute if imported as a library
     oscitest = OSCI()

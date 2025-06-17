@@ -23,7 +23,7 @@ class PPK:
         self.run = False                 #thread is running
         self.ui = UI
         
-    def setLogInterval(self,duration):
+    def set_log_interval(self,duration):
         """ define the duration between 2 logs
         If the duration is too low, the thread witll go as fast as possible.
         """
@@ -92,17 +92,12 @@ class PPK:
     
     def mainLoopAmp(self):
         startDate = time.time()
-        deadline = startDate+self.logInterval
         ppk2_test = PPK2_API(self.port, timeout=1, write_timeout=1, exclusive=True)
         ppk2_test.get_modifiers()
         ppk2_test.set_source_voltage(1)
         ppk2_test.use_ampere_meter()  # set ampere meter mode
         ppk2_test.start_measuring()
-        #time.sleep(0.5)  # average delay on the amperemeter start
         while self.run:
-            #periodicity
-            time.sleep(max(0,deadline-time.time()))
-            deadline += self.logInterval
             #measure
             average_A= 0  # by default, if shown it mean error
             read_data = ppk2_test.get_data()
@@ -111,12 +106,11 @@ class PPK:
                 average_A = sum(samples)/len(samples)
             with self.dataLock:
                 self.log.append((time.time()-startDate,average_A))
-            #print("at {0} s we got {1} \n".format(time.time()-startDate,average_A))
+            #periodicity
+            time.sleep(self.logInterval)
         #closing…
         ppk2_test.stop_measuring()
-        stopDate=time.time()
         self.ps.close()
-        self.duration=stopDate-startDate
         self.mainThread = None
     
     def stop(self):
