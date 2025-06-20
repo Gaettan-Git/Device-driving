@@ -10,7 +10,6 @@ import csv
 from tkinter import messagebox
 from decimal import Decimal
 
-
 class Scale:
     """Act as a scale referance, for differant unit"""
     def __init__(self):
@@ -42,7 +41,8 @@ class OSCI:
         self.scale = Scale()
         self.waveforms = {}
         self.mainThread = None
-        self.logInterval = 1
+        self.dataLock = threading.Lock()
+        self.logInterval = 0.001
         self.run = False
         self.ui = UI
         
@@ -63,11 +63,11 @@ class OSCI:
                 messagebox.showinfo(title='Successfully connected',message="Found oscilloscope")
             else:
                 print("Found oscilloscope :",self._get())
-        except:
+        except Exception as e:
             if self.ui:
-                messagebox.showerror(title='Connection problem',message="Error occured while attempting connect to device")
+                messagebox.showerror(title='Connection problem',message=e)
             else:
-                sys.exit("Error connecting with oscilloscope")
+                sys.exit(e)
     
     def setup(self):
         """Set up the device with provided configuration."""
@@ -159,31 +159,6 @@ class OSCI:
         self._write(f":TRIGger:EDGE:SOURce {trig['source']}{trig['source_number']}")
         self._write(f":TRIGger:EDGE:SLOPe {trig['slope']}{trig['slope_unit']}")
         self._write(f":TRIGger:EDGE:LEVel {self.float_to_nr3(trig['threshold'])}")
-    
-    def _acquire_data(self):
-        """Acquire data from device by waiting for trigger event to be detected."""
-        try:
-            self._write(":WAVeform:FORMat ASCII")
-            self._write(":WAVeform:POINts:MODE MAXimum")
-            # Calculate the number of points based on the horizontal scale and required frequency
-            time_range = (
-                10 * self.config.timescale[0] * self.scale.time[self.config.timescale[1]]
-            )
-            freq = self.config.frequency[0] * self.scale.frequency[self.config.frequency[1]]
-            num_points = int(time_range * freq)
-            self._write(f":WAVeform:POINts {num_points}")
-            
-            self._get("*OPC?")
-            self._write(":SINGLE")
-
-            while True:
-                cond = int(self._get(":OPERegister:CONDition?"))
-                if (cond & 0b1000) == 0:
-                    break
-                time.sleep(0.001)
-                
-        except Exception as e:
-            print("Acquisition error %s", e)
             
     def set_channel_setting(self,setname,setvalue,number:int=1):
         """
@@ -216,39 +191,6 @@ class OSCI:
         """
         self.config.timescale = (num,unit)
         self._setup_time_base()
-    
-    def collect(self):
-        """Collect data"""
-        try:
-            self._acquire_data()
-            for ch in self.config.channels:
-                if ch["display"]=='ON':
-                    self._write(f":WAVeform:SOURce CHANnel{ch['number']}")
-                    raw_data = self._get(":WAVeform:DATA?").strip()
-                try:
-                    values = [float(v) for v in raw_data.split(",")[1:]]
-                    self.waveforms[ch['name']] = values
-                except Exception as e:
-                    self.waveforms[ch['name']] = []
-
-            for key in self.waveforms:
-                if self.waveforms[key] != []: 
-                    min_len = len(self.waveforms[key])
-                    sampling_duration = (
-                        self.config.timescale[0] * self.scale.time[self.config.timescale[1]]
-                    )
-                    time_increment = sampling_duration / min_len
-                    self.waveforms['time'] = []
-                    
-                    for i in range(min_len):
-                        time_stamp = i * time_increment
-                        self.waveforms['time'].append(time_stamp)
-                    return ''
-                
-            sys.exit("No data to save")
-                
-        except KeyboardInterrupt:
-            self.release()
 
     def release(self):
         self.com.close()
@@ -276,8 +218,6 @@ class OSCI:
                 if ch['display'] == 'ON':
                     self.waveforms[ch['name']].append(float(self._get(":MEASure:VMAX?")))
             self.waveforms['time'].append(time.time()-startDate)
-            #periodicity
-            time.sleep(self.logInterval)
         #closing…
         self.release()
         self.mainThread = None

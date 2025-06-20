@@ -14,12 +14,13 @@ class PPK:
     """
     def __init__(self,UI:bool=False):
         self.ps = None                   # handler to the serial port
-        self.logInterval = 0.100         # duration between logs, in s
+        self.logInterval = 0.005         # duration between logs, in s
         self.log = []                    # tuple (date(s),current,actualCurrent)
         self.port= ''
         self.duration=0
         self.mainThread = None           #Thread handler.
         self.dataLock = threading.Lock()
+        self.signal = False
         self.run = False                 #thread is running
         self.ui = UI
         
@@ -43,8 +44,8 @@ class PPK:
         #find ports...
         ports = serial.tools.list_ports.comports()
         plugged_devices = PPK2_API.list_devices()
-        if len(plugged_devices) != 1:
-            if len(plugged_devices) > 1:
+        if len(plugged_devices) != 2:
+            if len(plugged_devices) > 2:
                 if self.ui:
                     messagebox.showerror(title='ERROR',message="Multiple power profiler kit connected!")
                     self.connectToDevice()
@@ -94,20 +95,20 @@ class PPK:
         startDate = time.time()
         ppk2_test = PPK2_API(self.port, timeout=1, write_timeout=1, exclusive=True)
         ppk2_test.get_modifiers()
-        ppk2_test.set_source_voltage(1)
+        ppk2_test.set_source_voltage(5)
         ppk2_test.use_ampere_meter()  # set ampere meter mode
         ppk2_test.start_measuring()
         while self.run:
             #measure
-            average_A= 0  # by default, if shown it mean error
-            read_data = ppk2_test.get_data()
-            if read_data != b'':
-                samples = ppk2_test.get_samples(read_data)[0]
-                average_A = sum(samples)/len(samples)
-            with self.dataLock:
-                self.log.append((time.time()-startDate,average_A))
-            #periodicity
-            time.sleep(self.logInterval)
+            if self.signal:
+                with self.dataLock:
+                    average_A= 0  # by default, if shown it mean error
+                    read_data = ppk2_test.get_data()
+                    if read_data != b'':
+                        samples = ppk2_test.get_samples(read_data)[0]
+                        average_A = sum(samples)/len(samples)
+                    self.log.append((time.time()-startDate,average_A))
+                self.signal = False
         #closing…
         ppk2_test.stop_measuring()
         self.ps.close()
