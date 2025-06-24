@@ -20,12 +20,9 @@ class PS:
     def __init__(self,UI:bool = False):
         self.ps = None                   # handler to the serial port
         self.logInterval = 0.005         # duration between logs, in s
-        self.log = []                    # tuple (date(s), voltage ,current, actualVoltage, actualCurrent)
+        self.log = {}                    # tuple (date(s), voltage ,current, actualVoltage, actualCurrent)
         self.voltageSetpoint = 0.0       # V
         self.currentSetpoint = 0.0       # I
-        self.mainThread = None
-        self.dataLock = threading.Lock()
-        self.run = False                 #thread is running
         self.com = None
         self.ui=UI
         
@@ -84,9 +81,8 @@ class PS:
 
     def setOperatingPoint(self,voltage, amp):
         self.checkconnected()
-        with self.dataLock:
-            self.voltageSetpoint = voltage
-            self.currentSetpoint = amp
+        self.voltageSetpoint = voltage
+        self.currentSetpoint = amp
         self.com.write('VSET1:'+str(voltage)+'\n')
         self.com.write('ISET1:'+str(amp)+'\n')
 
@@ -118,40 +114,24 @@ class PS:
         with self.dataLock:
             self.logInterval = duration
             
-    def start(self, Vinit, Iinit):
-        if self.mainThread:
-            sys.stderr.write('ERROR: power supply already started!')
-        else:
-            # setup ..
-            self.checkconnected()
-            self.setOperatingPoint(Vinit,Iinit)
-            self.setOutput(True)
-            self.log = []
-            # .. and run
-            self.mainThread = threading.Thread(target=self.mainLoop)
-            self.run = True
-            self.mainThread.start()
+    def setup(self, Vinit, Iinit):
+        self.checkconnected()
+        self.setOperatingPoint(Vinit,Iinit)
+        self.setOutput(True)
+        self.log['Vout'] = []
+        self.log['Iout'] = []
 
-    def stop(self):
-        self.run = False
-
-    def mainLoop(self):
-        startDate = time.time()
-        while self.run:
-            #measure
-            (Vcur,Icur) = self.getOperatingPoint()
-            #log
-            with self.dataLock:
-                self.log.append((time.time()-startDate,Vcur,Icur,self.voltageSetpoint,self.currentSetpoint))
-        #closing…
-        stopDate=time.time()
-        self.duration = stopDate-startDate
-        self.setOutput(False)
-        self.ps.close()
-        self.mainThread = None
+    def measure(self):
+        #measure
+        (Vcur,Icur) = self.getOperatingPoint()
+        self.log['Vout'].append(Vcur)
+        self.log['Iout'].append(Icur)
         
 if __name__ == '__main__':  # For debug purpose, wont execute if imported as a library
     pstest = PS()
     pstest.connectToSupply()
-    pstest.setOutput(True)
-    
+    pstest.setup(1.8,1)
+    start = time.time()
+    for i in range(5):
+        pstest.measure()
+    print(pstest.log,time.time()-start)

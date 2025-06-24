@@ -20,10 +20,10 @@ class Config:
     """class to handle configurations of the machine"""
     def __init__(self):   
         self.channels = [
-            {"number":1,"name":"CH1","probe_ratio":1,"vertical_scale":500,"vertical_unit_name":"mV","offset":0,"offset_unit_name":"V","display":"OFF"},
-            {"number":2,"name":"CH2","probe_ratio":1,"vertical_scale":500,"vertical_unit_name":"mV","offset":0,"offset_unit_name":"V","display":"OFF"},
-            {"number":3,"name":"CH3","probe_ratio":1,"vertical_scale":500,"vertical_unit_name":"mV","offset":0,"offset_unit_name":"V","display":"OFF"},
-            {"number":4,"name":"CH4","probe_ratio":1,"vertical_scale":500,"vertical_unit_name":"mV","offset":0,"offset_unit_name":"V","display":"OFF"}
+            {"number":'1',"name":"CH1","probe_ratio":'1',"vertical_scale":'500',"vertical_unit_name":"mV","offset":'0',"offset_unit_name":"V","display":"OFF"},
+            {"number":'2',"name":"CH2","probe_ratio":'1',"vertical_scale":'500',"vertical_unit_name":"mV","offset":'0',"offset_unit_name":"V","display":"OFF"},
+            {"number":'3',"name":"CH3","probe_ratio":'1',"vertical_scale":'500',"vertical_unit_name":"mV","offset":'0',"offset_unit_name":"V","display":"OFF"},
+            {"number":'4',"name":"CH4","probe_ratio":'1',"vertical_scale":'500',"vertical_unit_name":"mV","offset":'0',"offset_unit_name":"V","display":"OFF"}
             ]
         self.trigger = {"source":"CHANnel","source_number":1,"slope":1,"slope_unit":"V","threshold":1}
         self.timescale = (200,'US')
@@ -76,6 +76,9 @@ class OSCI:
             self._setup_time_base()
             self._setup_channels()
             self._setup_trigger()
+            for ch in self.config.channels:
+                self.waveforms[ch['name']] = []
+            self.waveforms['time'] = []
         except KeyboardInterrupt:
             self.release()
     
@@ -191,39 +194,24 @@ class OSCI:
         """
         self.config.timescale = (num,unit)
         self._setup_time_base()
-
+    
+    def measure(self):
+        for ch in self.config.channels:
+            if ch['display']=='ON':
+                self.waveforms[ch['name']].append(float(self._get(f":MEASure:VMAX? CHANnel{ch['number']}")))
+        
     def release(self):
         self.com.close()
-    
-    def start(self):
-        if self.mainThread:
-            sys.stderr.write('ERROR: power supply already started!')
-        else:
-            # run
-            self.mainThread = threading.Thread(target=self.mainLoop)
-            for ch in self.config.channels:
-                self.waveforms[ch['name']] = []
-            self.waveforms['time'] = []
-            self.run = True
-            self.mainThread.start()
-
-    def stop(self):
-        self.run = False
-
-    def mainLoop(self):
-        startDate = time.time()
-        while self.run:
-            #measure
-            for ch in self.config.channels:
-                if ch['display'] == 'ON':
-                    self.waveforms[ch['name']].append(float(self._get(":MEASure:VMAX?")))
-            self.waveforms['time'].append(time.time()-startDate)
-        #closing…
-        self.release()
-        self.mainThread = None
         
 if __name__ == '__main__':  # For debug purpose, wont execute if imported as a library
     oscitest = OSCI()
     oscitest.connectToDevice()
     oscitest.setup()
+    oscitest.set_channel_setting('display','ON',1)
+    oscitest.set_channel_setting("vertical_scale",'2',1)
+    oscitest.set_channel_setting("vertical_unit_name","V",1)
+    start = time.time()
+    for i in range(5):
+        oscitest.measure()
+    print(oscitest.waveforms,time.time()-start)
     oscitest.release()

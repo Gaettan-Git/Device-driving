@@ -15,14 +15,12 @@ class PPK:
     def __init__(self,UI:bool=False):
         self.ps = None                   # handler to the serial port
         self.logInterval = 0.005         # duration between logs, in s
-        self.log = []                    # tuple (date(s),current,actualCurrent)
+        self.log = {}                    
+        self.run = False
         self.port= ''
         self.duration=0
-        self.mainThread = None           #Thread handler.
-        self.dataLock = threading.Lock()
-        self.signal = False
-        self.run = False                 #thread is running
         self.ui = UI
+        self.com = None
         
     def set_log_interval(self,duration):
         """ define the duration between 2 logs
@@ -59,10 +57,10 @@ class PPK:
                     sys.exit("No power profiler kit detected!")
         #... and connect to it.
         try:
-            self.ps = serial.Serial(port=plugged_devices[0], baudrate=115200, timeout=1)
+            self.ps = serial.Serial(port=plugged_devices[1], baudrate=115200, timeout=1)
             time.sleep(0.2)
             self.ps.reset_input_buffer()
-            self.port = plugged_devices[0]
+            self.port = plugged_devices[1]
             if self.ui:
                 messagebox.showinfo(title='Successfully connected',message="Found PPK2 at {0}".format(plugged_devices[0]))
             else:
@@ -79,44 +77,39 @@ class PPK:
             sys.stderr.write ("ERROR: try to work on closed port "+self.ps.name()+"\n")
             sys.exit(1)    
     
-    def startAmperemeter(self):
-        if self.mainThread:
-            sys.stderr.write('ERROR: power profile kit already measuring!')
+    def setup(self):
+        self.checkconnected()
+        self.log['Iout'] = []
+        self.com = PPK2_API(self.port, timeout=1, write_timeout=1, exclusive=True)
+        try:
+            self.com.get_modifiers()
+        except:
+            pass
+        self.com.set_source_voltage(5)
+        self.com.use_ampere_meter()  # set ampere meter mode
+        self.com.toggle_DUT_power('ON')
+        self.com.start_measuring()
+        self.run = True
+        
+    def measure(self):
+        read_data = self.com.get_data()
+        if self.run:
+            samples, raw_digital = self.com.get_samples(read_data)
+            self.log['Iout'].append(sum(samples)/len(samples))
         else:
-            # setup ..
-            self.checkconnected()
-            self.log = []
-            # .. and run
-            self.mainThread = threading.Thread(target=self.mainLoopAmp)
-            self.run = True
-            self.mainThread.start()
-    
-    def mainLoopAmp(self):
-        startDate = time.time()
-        ppk2_test = PPK2_API(self.port, timeout=1, write_timeout=1, exclusive=True)
-        ppk2_test.get_modifiers()
-        ppk2_test.set_source_voltage(5)
-        ppk2_test.use_ampere_meter()  # set ampere meter mode
-        ppk2_test.start_measuring()
-        while self.run:
-            #measure
-            if self.signal:
-                with self.dataLock:
-                    average_A= 0  # by default, if shown it mean error
-                    read_data = ppk2_test.get_data()
-                    if read_data != b'':
-                        samples = ppk2_test.get_samples(read_data)[0]
-                        average_A = sum(samples)/len(samples)
-                    self.log.append((time.time()-startDate,average_A))
-                self.signal = False
-        #closing…
-        ppk2_test.stop_measuring()
-        self.ps.close()
-        self.mainThread = None
-    
+            print('Error : Amperemeter stopped')
+            
     def stop(self):
-        self.run=False
+        self.run = False
+        self.com.stop_measuring()
         
 if __name__ == '__main__':  # For debug purpose, wont execute if imported as a library
     ppktest = PPK()
     ppktest.connectToDevice()
+    ppktest.setup()
+    time.sleep(3)
+    for i in range(5):
+        ppktest.measure()
+        time.sleep(0.01)
+    print(ppktest.log)
+    ppktest.stop()
