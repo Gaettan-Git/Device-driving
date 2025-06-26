@@ -14,16 +14,16 @@ A method proposed come from the project EARLYBIRD https://hal.science/hal-046638
 == Devices used
 In order to work with the Apollo card, multiple devices were used:
 
-* A TENMA progammable power supply, capable of providing level of voltage required for the card, see ՝՝Emulator/PVEmu.py՝՝
+* A TENMA progammable power supply, capable of providing level of voltage required for the card, see ``Emulator/PVEmu.py``
 ** Code are in majority from https://github.com/mbriday/PVEmu/tree/main
-* The amperemeter included in the Power Profiler Kit 2 from Nordic, see ՝՝Emulator/PPKemu.py՝՝
+* The amperemeter included in the Power Profiler Kit 2 from Nordic, see ``Emulator/PPKemu.py``
 * A Keysight Oscilloscope, model DSOX1204G, for tension mesurement
 
 == Main files
 There is two main file:
 
-* ՝՝Main.py՝՝ a simpler version to show how emulators are used
-* ՝՝Main_UI.py՝՝ an more "advanced" version with a user interface
+* ``Main.py`` a simpler version to show how emulators are used
+* ``Main_UI.py`` an more "advanced" version with a user interface
 
 note that the emulator should be working with boths
 
