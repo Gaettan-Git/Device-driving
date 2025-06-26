@@ -1,8 +1,3 @@
-:toc:
-
-= Documentation
-Kadwalon Lobet, Guillaume de Maricourt.
-
 == Project description
 The project is focusing around the consumption of a control card, the Apollo 4 model.
 This card is being use in order to record populations of birds.
