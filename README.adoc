@@ -27,4 +27,4 @@ There is two main file:
 
 note that the emulator should be working with boths
 
-NOTE : The UI version is imcomplete, oscilloscope not fully implemented
+NOTE: The UI version is imcomplete, oscilloscope not fully implemented
