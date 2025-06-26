@@ -10,18 +10,18 @@ import threading
 
 #_________plotting function_________#
 
-def preparation(nbpente:int=2):
+def preparation(nbpente:int=2):        # nb of back and forward for the tension
     tension = osci.waveforms['albert']
     coup = len(tension)//nbpente
     tensionref = tension[:coup]
-    courant = ppk.log['Iout']
-    courant1=[]
-    courant2=[]
+    courant = [el/1000 for el in ppk.log['Iout']] # Conversion from uA to mA
+    courant1=[]    # 1 for the incrementation phase
+    courant2=[]    # 2 for the decrementation phase
     P = [eli*elu for eli,elu in zip(tension,courant)]
     P1 = []
     P2 = []
     
-    diffc = []
+    diffc = []   # Differences of power consumption between increment and decrement voltage 
     diffp = []
     for i in range(coup):
         courant1.append(courant[i])
@@ -33,17 +33,16 @@ def preparation(nbpente:int=2):
         calc = (P1[i]+P2[i])/2
         diffp.append(calc)
     
-    return tensionref,courant1,courant2,P1,P2,diffc,diffp
+    return tensionref,courant1,courant2,P1,P2,diffc,diffp  # data treated, ready for plot
 
 def showLogs():
     tension,courant1,courant2,P1,P2,diffc,diffp = preparation()
-    print(diffc,diffp)
     fig,ax1 = plt.subplots()
     ax1.set_xlabel('Tension in V')
     ax1.plot(tension,courant1,ls='-',color='blue')
     ax1.plot(tension,courant2,ls=':',color='blue')
     ax1.plot(tension,diffc,ls='-',color='black')
-    ax1.fill_between(tension,courant1,courant2,color='cyan')
+    ax1.fill_between(tension,courant1,courant2,color='cyan',alpha=0.2)
     ax1.set_ylabel('Current in mA')
     ax1.axvline(x=1.8,ls=':',color='green')
     ax1.axvline(x=3.3,ls=':',color='green')
@@ -52,7 +51,7 @@ def showLogs():
     ax2.plot(tension,P1,ls='-',color='red')
     ax2.plot(tension,P2,ls=':',color='red')
     ax2.plot(tension,diffp,ls='-',color='black')
-    ax2.fill_between(tension,P1,P2,color='magenta')
+    ax2.fill_between(tension,P1,P2,color='magenta',alpha=0.2)
     ax2.set_ylabel('Power in W')
 
     plt.show()
@@ -62,52 +61,43 @@ def setlogs(n):
     osci.set_log_interval(n)
     ppk.set_log_interval(n)
 
-def get_data():
+def get_data():     # Call measurement methods in Emulator classes
     osci.measure()
     ps.measure()
     ppk.measure()
-    temp.append(time.time()-start)
     
 res = input("Waiting ... ")
 
-ps=PSemu.PS()        # Creation of object to communicate (Look PSemu.py)
+# Creation of objects to communicate
+ps=PSemu.PS()        
 ppk = PPKemu.PPK()
 osci = OSCIemu.OSCI()
-ps.connectToSupply()
-ppk.connectToDevice()
-osci.connectToDevice()
+# Connection with the differant devices
+ps.connect_to_device()
+ppk.connect_to_device()
+osci.connect_to_device()
+# Setting up for measures
 osci.set_channel(1,{"number":'1',"name":"albert","probe_ratio":'1',"vertical_scale":'2',"vertical_unit_name":"V","offset":'0',"offset_unit_name":"V","display":"ON"})
 ps.setup(1.8,1)
 ppk.setup()
 osci.setup()
+time.sleep(0.5) # to be sure everyone is ready
+U=180   # work with int, to avoid weird python approximation when incrementing in float (+0.05)
 
-U=1.8
-mark1_1=0
-mark1_2=0
-mark2_1=0
-mark2_2=0
-start = time.time()
-temp=[]
-
-while U<5:
-    ps.setOperatingPoint(U,1) 
+while U<500:
+    U += 5
+    ps.setOperatingPoint(U/100,1)   # convert in V (180 = 1.80 V)
     time.sleep(0.1)
     get_data()
-    if U>1.8 and mark1_1==0:
-        mark1_1 = time.time()-start
-    if U>3.3 and mark1_2==0:
-        mark1_2 = time.time()-start
-    U += 0.05
-    
-while U>1.8:
-    U -= 0.05
-    ps.setOperatingPoint(U,1)
+        
+while U>180:
+    U -= 5
+    ps.setOperatingPoint(U/100,1)
     time.sleep(0.1)
     get_data()
-    if U<1.8 and mark2_1==0:
-        mark2_1 = time.time()-start
-    if U<3.3 and mark2_2==0:
-        mark2_2 = time.time()-start
 
-ppk.stop()
+# Close communication
+ps.release()
+ppk.release()
+osci.release()
 showLogs() 

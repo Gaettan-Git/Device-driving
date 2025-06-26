@@ -26,7 +26,7 @@ class PS:
         self.com = None
         self.ui=UI
         
-    def connectToSupply(self):
+    def connect_to_device(self):
         self.ps = None
         rm = pyvisa.ResourceManager()
         try:
@@ -45,7 +45,7 @@ class PS:
             if len(devicesPS) > 1:
                 if self.ui:
                     messagebox.showerror(title='ERROR',message="Too many power supplies detected!")
-                    self.connectToSupply()
+                    self.connect_to_device()
                 else:
                     sys.exit("Too many power supplies detected!")
             else:
@@ -111,8 +111,7 @@ class PS:
         """ define the duration between 2 logs
         If the duration is too low, the thread witll go as fast as possible.
         """
-        with self.dataLock:
-            self.logInterval = duration
+        self.logInterval = duration
             
     def setup(self, Vinit, Iinit):
         self.checkconnected()
@@ -126,6 +125,10 @@ class PS:
         (Vcur,Icur) = self.getOperatingPoint()
         self.log['Vout'].append(Vcur)
         self.log['Iout'].append(Icur)
+    
+    def release():
+        self.com = None
+        self.ps.close()
         
 if __name__ == '__main__':  # For debug purpose, wont execute if imported as a library
     pstest = PS()

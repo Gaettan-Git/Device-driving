@@ -1,7 +1,9 @@
 #! /.venv/bin/python3
 # -*- coding: UTF-8 -*-
 
+import serial
 import pyvisa
+import usb
 import sys
 import threading
 import os
@@ -25,7 +27,7 @@ class Config:
             {"number":'3',"name":"CH3","probe_ratio":'1',"vertical_scale":'500',"vertical_unit_name":"mV","offset":'0',"offset_unit_name":"V","display":"OFF"},
             {"number":'4',"name":"CH4","probe_ratio":'1',"vertical_scale":'500',"vertical_unit_name":"mV","offset":'0',"offset_unit_name":"V","display":"OFF"}
             ]
-        self.trigger = {"source":"CHANnel","source_number":1,"slope":1,"slope_unit":"V","threshold":1}
+        self.trigger = {"source":"CHANnel","source_number":'1',"slope":'1',"slope_unit":"V","threshold":'1'}
         self.timescale = (200,'US')
         self.frequency = (1,'KHz')
         
@@ -55,10 +57,12 @@ class OSCI:
         number = float(value * self.scale.time[time_base])
         return self.float_to_nr3(number)
     
-    def connectToDevice(self):
+    def connect_to_device(self):
         rm = pyvisa.ResourceManager()
+        ports = serial.tools.list_ports.comports()
         try:
             self.com = rm.open_resource('USB0::10893::918::CN62117164::0::INSTR')
+            # You might have to change with the number corresponding to your device
             if self.ui:
                 messagebox.showinfo(title='Successfully connected',message="Found oscilloscope")
             else:
@@ -205,13 +209,9 @@ class OSCI:
         
 if __name__ == '__main__':  # For debug purpose, wont execute if imported as a library
     oscitest = OSCI()
-    oscitest.connectToDevice()
+    oscitest.connect_to_device()
     oscitest.setup()
     oscitest.set_channel_setting('display','ON',1)
     oscitest.set_channel_setting("vertical_scale",'2',1)
     oscitest.set_channel_setting("vertical_unit_name","V",1)
-    start = time.time()
-    for i in range(5):
-        oscitest.measure()
-    print(oscitest.waveforms,time.time()-start)
     oscitest.release()

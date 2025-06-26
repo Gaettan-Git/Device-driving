@@ -4,7 +4,7 @@
 import time
 import sys
 import threading
-from ppk2_api.ppk2_api import PPK2_API
+from ppk2_api.ppk2_api import PPK2_API,PPK2_MP
 from tkinter import *
 from tkinter import messagebox
 
@@ -29,7 +29,7 @@ class PPK:
         with self.dataLock:
             self.logInterval = duration
             
-    def connectToDevice(self):
+    def connect_to_device(self):
         self.ps = None
         try:
             import serial
@@ -62,11 +62,11 @@ class PPK:
             self.ps.reset_input_buffer()
             self.port = plugged_devices[1]
             if self.ui:
-                messagebox.showinfo(title='Successfully connected',message="Found PPK2 at {0}".format(plugged_devices[0]))
+                messagebox.showinfo(title='Successfully connected',message="Found PPK2 at {0}".format(plugged_devices[1]))
             else:
-                print("Found PPK2 at {0}".format(plugged_devices[0]))
+                print("Found PPK2 at {0}".format(plugged_devices[1]))
         except serial.serialutil.SerialException:
-            print('Serial line {0} not found'.format(plugged_devices[0]))  
+            print('Serial line {0} not found'.format(plugged_devices[1]))  
             sys.exit(1)
     
     def checkconnected(self):
@@ -80,36 +80,35 @@ class PPK:
     def setup(self):
         self.checkconnected()
         self.log['Iout'] = []
-        self.com = PPK2_API(self.port, timeout=1, write_timeout=1, exclusive=True)
+        self.com = PPK2_MP(self.port, timeout=1, write_timeout=1, exclusive=True)
         try:
             self.com.get_modifiers()
-        except:
-            pass
-        self.com.set_source_voltage(5)
+        except Exception as e:
+            print(e)
+
+        self.com.set_source_voltage(3300)
         self.com.use_ampere_meter()  # set ampere meter mode
         self.com.toggle_DUT_power('ON')
         self.com.start_measuring()
-        self.run = True
         
     def measure(self):
         read_data = self.com.get_data()
-        if self.run:
+        if read_data != b'':
             samples, raw_digital = self.com.get_samples(read_data)
+            #print(f"Average of {len(samples)} samples is: {sum(samples)/len(samples)}uA")
             self.log['Iout'].append(sum(samples)/len(samples))
-        else:
-            print('Error : Amperemeter stopped')
             
-    def stop(self):
-        self.run = False
+    def release(self):
         self.com.stop_measuring()
+        self.ps.close()
+        self.com = None
         
 if __name__ == '__main__':  # For debug purpose, wont execute if imported as a library
     ppktest = PPK()
-    ppktest.connectToDevice()
+    ppktest.connect_to_device()
     ppktest.setup()
-    time.sleep(3)
-    for i in range(5):
+    for i in range(100):
+        time.sleep(0.1)
         ppktest.measure()
-        time.sleep(0.01)
     print(ppktest.log)
-    ppktest.stop()
+    ppktest.release()
