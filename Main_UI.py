@@ -16,7 +16,11 @@ from tkinter import messagebox
 #____________functions use to control devices______________#   
 def preparation(nbpente:int=2):        # nb of back and forward for the tension
     global ps,ppk,osci,El_osci_3
-    tension = osci.waveforms[El_osci_3.get()]
+    try:
+        tension = osci.waveforms[El_osci_3.get()]
+    except NameError:  # If no test have been run, osci doesn't exist
+        messagebox.showerror(title='No logs registered',message="You should run at least one test before that")
+        return
     coup = len(tension)//nbpente
     tensionref = tension[:coup]
     if amp_source == 'PPK':
@@ -44,23 +48,25 @@ def preparation(nbpente:int=2):        # nb of back and forward for the tension
     return tensionref,courant1,courant2,P1,P2,diffc,diffp  # data treated, ready for plot
 
 def showLogs():
-    tension,courant1,courant2,P1,P2,diffc,diffp = preparation()
+    # If logs are empty, preparation will return None
+    try:
+        tension,courant1,courant2,P1,P2,diffc,diffp = preparation()
+    except TypeError: # And then we abort the show function
+        return
     fig,ax1 = plt.subplots()
     ax1.set_xlabel('Tension in V')
     ax1.plot(tension,courant1,ls='-',color='blue')
     ax1.plot(tension,courant2,ls=':',color='blue')
     ax1.plot(tension,diffc,ls='-',color='black')
     ax1.fill_between(tension,courant1,courant2,color='cyan',alpha=0.2)
-    ax1.set_ylabel('Current in mA',color='blue',font=("Courier new", 16,"bold"))
-    ax1.axvline(x=1.8,ls=':',color='green')
-    ax1.axvline(x=3.3,ls=':',color='green')
+    ax1.set_ylabel('Current in mA',color='blue',fontsize=15)
 
     ax2=ax1.twinx()
     ax2.plot(tension,P1,ls='-',color='red')
     ax2.plot(tension,P2,ls=':',color='red')
     ax2.plot(tension,diffp,ls='-',color='black')
     ax2.fill_between(tension,P1,P2,color='magenta',alpha=0.2)
-    ax2.set_ylabel('Power in W',color='red',font=("Courier new", 16,"bold"))
+    ax2.set_ylabel('Power in W',color='red',fontsize=15)
 
     plt.show()
 
@@ -127,45 +133,43 @@ title_label_style = {"bg": "#BD63FF", "fg": "black", "highlightthickness": 0,"fo
 default_button_style = {"bg": "#ffffff", "fg": "black","font":("Impact",12,"italic")}
 
 #/// creation of decoration images
-menuPV = PhotoImage(file = r"UI_element/menu_PV.png").subsample(2,2)
+menuPS = PhotoImage(file = r"UI_element/menu_PV.png").subsample(2,2)
 menuPPK = PhotoImage(file = r"UI_element/menu_amp.png").subsample(2,2)
 menuOSCI = PhotoImage(file = r"UI_element/menu_osci.png")
-imgPV = PhotoImage(file = r"UI_element/Tenma.png").subsample(12,12)
+imgPS = PhotoImage(file = r"UI_element/Tenma.png").subsample(12,12)
 imgPPK = PhotoImage(file = r"UI_element/Nordic.png").subsample(18,18)
 imggraph = PhotoImage(file = r"UI_element/graphic.png").subsample(4,4)
 
-Label(root,width=menuPV.width(),height=menuPV.height(),image=menuPV).grid(column=0,row=0,rowspan=10,columnspan=2) # menu image
+Label(root,width=menuPS.width(),height=menuPS.height(),image=menuPS).grid(column=0,row=1,rowspan=5,columnspan=2) # menu image
     
 #///part for a progressive/linear voltage (and a set current)
 Label(root, text='Progressive set',**title_label_style).grid(column=2,columnspan=9,row=1)
-Label(root,text='from',**default_label_style).grid(column=2,columnspan=3,row=3)
+Label(root,text='from',**default_label_style).grid(column=4,row=2)
 V_min = ttk.Spinbox(root,width=10,from_=0,to=8,increment=0.01)
 V_min.set(1.8) # default value
-V_min.grid(column=5,columnspan=3,row=3)
-Label(root,text='V',**default_label_style).grid(column=8,columnspan=3,row=3)
-Label(root,text='to',**default_label_style).grid(column=2,columnspan=3,row=4)
+V_min.grid(column=5,columnspan=2,row=2)
+Label(root,text='V',**default_label_style).grid(column=7,row=2)
+Label(root,text='to',**default_label_style).grid(column=4,row=3)
 V_max = ttk.Spinbox(root,width=10,from_=0,to=8,increment=0.01)
 V_max.set(5) # default value
-V_max.grid(column=5,columnspan=3,row=4)
-Label(root,text='V',**default_label_style).grid(column=8,columnspan=3,row=4)
-Label(root,text='Step :',justify='right',**default_label_style).grid(column=3,columnspan=3,row=5)
+V_max.grid(column=5,columnspan=2,row=3)
+Label(root,text='V',**default_label_style).grid(column=7,row=3)
+Label(root,text='Step :',justify='right',**default_label_style).grid(column=3,columnspan=3,row=4)
 step = ttk.Combobox(root,values=['1','0.1','0.01'],width=5,state='readonly')
 step.current(1)
-step.grid(column=7,columnspan=3,row=5)
-Label(root,text='Enter Current',**default_label_style).grid(column=3,columnspan=3,row=6)
+step.grid(column=6,columnspan=3,row=4)
+Label(root,text='Enter Current',**default_label_style).grid(column=3,columnspan=3,row=5)
 A_set = ttk.Spinbox(root,width=10,from_=0,to=2,increment=0.001)
 A_set.set(0.01) # default value
-A_set.grid(column=7,columnspan=3,row=6)
-Button(root,text='Go !',command=go_test,**default_button_style).grid(column=2,columnspan=9,row=8)
+A_set.grid(column=6,columnspan=3,row=5)
 
-#///part for the on/off of amperemeter
 amp_source = StringVar()
 amp_source.set('PS')
 menu_amp = Label(root,height=menuPPK.height(),width=menuPPK.width(),image=menuPPK)
 El_amp_1 = Label(root,text='Choose amperemeter source',**title_label_style)
 El_amp_2 = Radiobutton(root,variable=amp_source,value='PS',text='Power Source',**default_label_style)
 El_amp_3 = Radiobutton(root,variable=amp_source,value='PPK',text='Power Profiler',**default_label_style)
-El_amp_4 = Label(root,width=imgPV.width(),height=imgPV.height(),image=imgPV,**default_label_style)
+El_amp_4 = Label(root,width=imgPS.width(),height=imgPS.height(),image=imgPS,**default_label_style)
 El_amp_5 = Label(root,width=imgPPK.width(),height=imgPPK.height(),image=imgPPK)
 
 menu_osci = Label(root,height=menuOSCI.height(),width=menuOSCI.width(),image=menuOSCI)
@@ -184,25 +188,26 @@ El_osci_8.insert(END,'0')
 El_osci_9 = ttk.Combobox(root, values=['V','mV'],width=5,state='readonly')
 El_osci_9.current(0)
 
-El_amp_1.grid(column=2,row=11,columnspan=9)
-El_amp_2.grid(column=2,row=12,columnspan=4)
-El_amp_3.grid(column=7,row=12,columnspan=4)
-El_amp_4.grid(column=2,row=13,columnspan=4)
-El_amp_5.grid(column=7,row=13,columnspan=4)
-menu_amp.grid(column=0,row=11,columnspan=2,rowspan=3)
+El_amp_1.grid(column=2,row=6,columnspan=9)
+El_amp_2.grid(column=2,row=7,columnspan=4)
+El_amp_3.grid(column=6,row=7,columnspan=4)
+El_amp_4.grid(column=2,row=8,columnspan=4)
+El_amp_5.grid(column=6,row=8,columnspan=4)
+menu_amp.grid(column=0,row=6,columnspan=2,rowspan=3)
 
-El_osci_1.grid(column=2,row=14,rowspan=3)
-El_osci_2.grid(column=3,row=14,rowspan=3)
-El_osci_3.grid(column=4,row=14,rowspan=3)
-El_osci_4.grid(column=5,row=14,rowspan=3)
-El_osci_5.grid(column=6,row=14,rowspan=3)
-El_osci_6.grid(column=7,row=14,rowspan=3)
-El_osci_7.grid(column=8,row=14,rowspan=3)
-El_osci_8.grid(column=9,row=14,rowspan=3)
-El_osci_9.grid(column=10,row=14,rowspan=3)
-menu_osci.grid(column=0,row=14,columnspan=2,rowspan=3)
-        
-Button(root,text='EARLYBIRD project page',bg='blue',fg='white',activebackground="#00FAFF",command=openlink,bd=5).grid(column=2,columnspan=9,row=0)
-Button(root,text='showresults',image=imggraph,compound="right",bg='#A10000',fg='#FFE9E9',bd=5,activebackground="#FF0000",command=showLogs).grid(column=2,columnspan=9,row=26)
+El_osci_1.grid(column=2,row=9,rowspan=3)
+El_osci_2.grid(column=3,row=9,rowspan=3)
+El_osci_3.grid(column=4,row=9,rowspan=3)
+El_osci_4.grid(column=5,row=9,rowspan=3)
+El_osci_5.grid(column=6,row=9,rowspan=3)
+El_osci_6.grid(column=7,row=9,rowspan=3)
+El_osci_7.grid(column=8,row=9,rowspan=3)
+El_osci_8.grid(column=9,row=9,rowspan=3)
+El_osci_9.grid(column=10,row=9,rowspan=3)
+menu_osci.grid(column=0,row=9,columnspan=2,rowspan=3)
+
+Button(root,text='Go testing',command=go_test,**default_button_style).grid(column=0,columnspan=11,row=12)
+Button(root,text='showresults',image=imggraph,compound="right",bg='#A10000',fg='#FFE9E9',bd=5,activebackground="#FF0000",command=showLogs).grid(column=0,columnspan=11,row=13)
+Button(root,text='EARLYBIRD project page',bg='blue',fg='white',activebackground="#00FAFF",command=openlink,bd=5).grid(column=0,columnspan=11,row=14)
 
 root.mainloop()
