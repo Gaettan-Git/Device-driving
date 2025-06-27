@@ -4,7 +4,7 @@ This card is being use in order to record populations of birds.
 
 == Objective
 The objective is to replace the battery as less as possible, to avoid disturbing those populations 
-A method proposed come from the project EARLYBIRD https://hal.science/hal-04663862v1
+A method proposed come from the project OWL https://owl.univ-nantes.fr
 
 == Devices used
 In order to work with the Apollo card, multiple devices were used:
