@@ -11,7 +11,7 @@ The code as been profiled to work with the following devices :
 
 * A TENMA progammable power supply, drivable to set a needed level of voltage, look ``Emulator/PSemu.py``
 ** Code are in majority from https://github.com/mbriday/PVEmu/tree/main
-* The Power Profiler Kit 2 from Nordic, which include an embeded precise amperemeter, look ``Emulator/PPKemu.py``
+* The Power Profiler Kit 2 from Nordic, which include an onboard amperemeter, look ``Emulator/PPKemu.py``
 * A Keysight Oscilloscope, model DSOX1204G, for tension mesurement, look ``Emulator/OSCIemu.py``
 
 == Main files
