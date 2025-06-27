@@ -109,6 +109,7 @@ class OSCI:
     def _write(self,cond:str=":DISPlay:ANNotation:TEXT ''"):
         """
         Wtitting method for instrument
+        check the commands available : https://www.manualslib.com/manual/1744505/Keysight-Technologies-Infiniivision-Dsox1204a.html?page=3#manual
         """
         if self.com == None:
             sys.exit("You need to connect to oscilloscope first !")

@@ -92,11 +92,12 @@ class PPK:
         self.com.start_measuring()
         
     def measure(self):
-        read_data = self.com.get_data()
-        if read_data != b'':
-            samples, raw_digital = self.com.get_samples(read_data)
-            #print(f"Average of {len(samples)} samples is: {sum(samples)/len(samples)}uA")
-            self.log['Iout'].append(sum(samples)/len(samples))
+        read_data1 = self.com.get_data()
+        read_data2 = self.com.get_data()
+        if read_data1 != b'':
+            samples, raw_digital = self.com.get_samples(read_data1)
+            samples2,raw = self.com.get_samples(read_data2)
+            self.log['Iout'].append((sum(samples)+sum(samples2))/(len(samples)+len(samples2)))
             
     def release(self):
         self.com.stop_measuring()

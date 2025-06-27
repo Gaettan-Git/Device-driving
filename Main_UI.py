@@ -1,6 +1,6 @@
 """
 File allowing to drive differents devices, in optic
-of the OWL research project : https://owl.univ-nantes.fr
+of the EARLYBIRD research project : https://hal.science/hal-04663862v1
 Include an user interface, if you don't want it, check the main.py file
 """
 from Emulator import PSemu,OSCIemu,PPKemu
@@ -119,15 +119,15 @@ def go_test():
         
 #_______Other function for the UI_____________#
 def openlink():
-    webbrowser.open('https://owl.univ-nantes.fr')
+    webbrowser.open('https://hal.science/hal-04663862v1')
         
 #______________________Creation of the tkinter UI___________________________#
 root = Tk()  # Create a new window
 root.title("General control")
-root.configure(bg="#82DAFF", padx=10, pady=10)
+root.configure(padx=10, pady=10)
 
 #///styling settings    
-default_label_style = {"bg": "#82DAFF", "fg": "black", "highlightthickness": 0,"font": ("Arial", 12,"bold")}
+default_label_style = {"fg": "black", "highlightthickness": 0,"font": ("Arial", 12,"bold")}
 default_entry_style = {"bg": "#ffffff", "fg": "black","font":("Impact",12),"width":10}
 title_label_style = {"bg": "#FFFFFF", "fg": "black", "highlightthickness": 0,"font": ("Courier new", 16,"bold"),"pady":5,"padx":35,"borderwidth":3,"relief":"solid"}
 default_button_style = {"bg": "#ffffff", "fg": "black","font":("Impact",12,"italic")}

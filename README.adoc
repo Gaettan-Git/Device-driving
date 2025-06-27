@@ -1,18 +1,18 @@
 == Project description
-The project is focusing around the consumption of a control card, the Apollo 4 model.
-This card is being use in order to record populations of birds.
+The project is focusing around the Power consumption of a control card.
+The code as the objective of driving different element to evaluate this consumption.
 
 == Objective
-The objective is to replace the battery as less as possible, to avoid disturbing those populations 
-A method proposed come from the project OWL https://owl.univ-nantes.fr
+With the driving of the different device, we can evaluate the power consumption of the control card.
+One application exemple is from the project OWL : https//owl.univ-nantes.fr
 
 == Devices used
-In order to work with the Apollo card, multiple devices were used:
+The code as been profiled to work with the following devices :
 
-* A TENMA progammable power supply, capable of providing level of voltage required for the card, see ``Emulator/PSemu.py``
+* A TENMA progammable power supply, drivable to set a needed level of voltage, look ``Emulator/PSemu.py``
 ** Code are in majority from https://github.com/mbriday/PVEmu/tree/main
-* The amperemeter included in the Power Profiler Kit 2 from Nordic, see ``Emulator/PPKemu.py``
-* A Keysight Oscilloscope, model DSOX1204G, for tension mesurement, see ``Emulator/OSCIemu.py``
+* The Power Profiler Kit 2 from Nordic, which include an embeded precise amperemeter, look ``Emulator/PPKemu.py``
+* A Keysight Oscilloscope, model DSOX1204G, for tension mesurement, look ``Emulator/OSCIemu.py``
 
 == Main files
 There is two main file:
@@ -21,3 +21,5 @@ There is two main file:
 * ``Main_UI.py`` an more "advanced" version with a user interface
 
 note that the emulator should be working with boths
+
+NOTE: in ``Emulator/OSCIemu.py`` the serial connection is established with a precise name for the device. It may be a differant one for yours.
