@@ -1,2 +1,2 @@
 == INFO
-This folder contain decorative element for the tkinter UI
+This folder contain the images, as a decorative element for the tkinter UI
