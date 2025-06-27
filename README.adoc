@@ -4,7 +4,8 @@ The code as the objective of driving different element to evaluate this consumpt
 
 == Objective
 With the driving of the different device, we can evaluate the power consumption of the control card.
-One application exemple is from the project OWL : https//owl.univ-nantes.fr
+One application exemple is from the project OWL
+https//owl.univ-nantes.fr
 
 == Devices used
 The code as been profiled to work with the following devices :
