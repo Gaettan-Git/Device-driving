@@ -1,6 +1,6 @@
 """
 File allowing to drive differents devices, in optic
-of the EARLYBIRD research project : https://hal.science/hal-04663862v1
+of the OWL research project : https://owl.univ-nantes.fr
 Include an user interface, if you don't want it, check the main.py file
 """
 from Emulator import PSemu,OSCIemu,PPKemu
@@ -129,7 +129,7 @@ root.configure(bg="#82DAFF", padx=10, pady=10)
 #///styling settings    
 default_label_style = {"bg": "#82DAFF", "fg": "black", "highlightthickness": 0,"font": ("Arial", 12,"bold")}
 default_entry_style = {"bg": "#ffffff", "fg": "black","font":("Impact",12),"width":10}
-title_label_style = {"bg": "#BD63FF", "fg": "black", "highlightthickness": 0,"font": ("Courier new", 16,"bold"),"pady":5,"padx":35,"borderwidth":3,"relief":"solid"}
+title_label_style = {"bg": "#FFFFFF", "fg": "black", "highlightthickness": 0,"font": ("Courier new", 16,"bold"),"pady":5,"padx":35,"borderwidth":3,"relief":"solid"}
 default_button_style = {"bg": "#ffffff", "fg": "black","font":("Impact",12,"italic")}
 
 #/// creation of decoration images
