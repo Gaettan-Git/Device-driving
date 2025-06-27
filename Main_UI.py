@@ -119,7 +119,7 @@ def go_test():
         
 #_______Other function for the UI_____________#
 def openlink():
-    webbrowser.open('https://hal.science/hal-04663862v1')
+    webbrowser.open('https://owl.univ-nantes.fr')
         
 #______________________Creation of the tkinter UI___________________________#
 root = Tk()  # Create a new window
