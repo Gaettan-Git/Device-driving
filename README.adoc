@@ -21,5 +21,3 @@ There is two main file:
 * ``Main_UI.py`` an more "advanced" version with a user interface
 
 note that the emulator should be working with boths
-
-NOTE: The UI version is imcomplete, oscilloscope not fully implemented
