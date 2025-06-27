@@ -64,12 +64,13 @@ class OSCI:
             self.com = rm.open_resource('USB0::10893::918::CN62117164::0::INSTR')
             # You might have to change with the number corresponding to your device
             if self.ui:
-                messagebox.showinfo(title='Successfully connected',message="Found oscilloscope")
+                messagebox.showinfo(title='Successfully connected',message="Found oscilloscope : "+self._get())
             else:
                 print("Found oscilloscope :",self._get())
         except Exception as e:
             if self.ui:
                 messagebox.showerror(title='Connection problem',message=e)
+                self.connect_to_device()
             else:
                 sys.exit(e)
     

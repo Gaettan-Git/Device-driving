@@ -126,7 +126,7 @@ class PS:
         self.log['Vout'].append(Vcur)
         self.log['Iout'].append(Icur)
     
-    def release():
+    def release(self):
         self.com = None
         self.ps.close()
         

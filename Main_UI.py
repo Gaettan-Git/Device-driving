@@ -14,8 +14,55 @@ from tkinter import ttk
 from tkinter import messagebox
 
 #____________functions use to control devices______________#   
+def preparation(nbpente:int=2):        # nb of back and forward for the tension
+    global ps,ppk,osci,El_osci_3
+    tension = osci.waveforms[El_osci_3.get()]
+    coup = len(tension)//nbpente
+    tensionref = tension[:coup]
+    if amp_source == 'PPK':
+        courant = [el/1000 for el in ppk.log['Iout']]
+    else:
+        courant = [el*1000 for el in ps.log['Iout']] # Conversion from uA to mA
+    courant1=[]    # 1 for the incrementation phase
+    courant2=[]    # 2 for the decrementation phase
+    P = [eli*elu for eli,elu in zip(tension,courant)]
+    P1 = []
+    P2 = []
+    
+    diffc = []   # Differences of power consumption between increment and decrement voltage 
+    diffp = []
+    for i in range(coup):
+        courant1.append(courant[i])
+        courant2.append(courant[-1-i])
+        P1.append(P[i])
+        P2.append(P[-1-i])        
+        calc = (courant1[i]+courant2[i])/2
+        diffc.append(calc)
+        calc = (P1[i]+P2[i])/2
+        diffp.append(calc)
+    
+    return tensionref,courant1,courant2,P1,P2,diffc,diffp  # data treated, ready for plot
+
 def showLogs():
-    loader.trigger()
+    tension,courant1,courant2,P1,P2,diffc,diffp = preparation()
+    fig,ax1 = plt.subplots()
+    ax1.set_xlabel('Tension in V')
+    ax1.plot(tension,courant1,ls='-',color='blue')
+    ax1.plot(tension,courant2,ls=':',color='blue')
+    ax1.plot(tension,diffc,ls='-',color='black')
+    ax1.fill_between(tension,courant1,courant2,color='cyan',alpha=0.2)
+    ax1.set_ylabel('Current in mA',color='blue',font=("Courier new", 16,"bold"))
+    ax1.axvline(x=1.8,ls=':',color='green')
+    ax1.axvline(x=3.3,ls=':',color='green')
+
+    ax2=ax1.twinx()
+    ax2.plot(tension,P1,ls='-',color='red')
+    ax2.plot(tension,P2,ls=':',color='red')
+    ax2.plot(tension,diffp,ls='-',color='black')
+    ax2.fill_between(tension,P1,P2,color='magenta',alpha=0.2)
+    ax2.set_ylabel('Power in W',color='red',font=("Courier new", 16,"bold"))
+
+    plt.show()
 
 def set_logs(n):
     pvemu.setLogInterval(n)
@@ -23,26 +70,25 @@ def set_logs(n):
 
 def get_data():
     global ps,ppk,osci
-    if recquire_amp and amp_source=='PPK':
+    if amp_source=='PPK':
         ppk.measure()
-    if recquire_osci:
-        osci.measure()
+    osci.measure()
     ps.measure()
        
 def go_test():
-    global recquire_amp,recquire_osci,pvemu,ppkemu,osciemu,loader,amp_source,ps,ppk,osci
+    global pvemu,ppkemu,loader,amp_source,ps,ppk,osci
     ps = PSemu.PS(UI=True)        # Creation of object to communicate (Look PSemu.py)
-    ps.connectToSupply()
+    ps.connect_to_device()
     
-    if recquire_amp and amp_source=='PPK':
+    if amp_source=='PPK':
         ppk = PPKemu.PPK(UI=True)
-        ppk.connectToDevice()
+        ppk.connect_to_device()
         ppk.setup()
-    if recquire_osci:
-        osci = OSCIemu.OSCI(UI=True)
-        osci.connectToDevice()
-        osci.set_channel(1,{"number":'1',"name":El_osci_3.get(),"probe_ratio":'1',"vertical_scale":El_osci_5.get(),"vertical_unit_name":El_osci_6.get(),"offset":El_osci_8.get(),"offset_unit_name":El_osci_9.get(),"display":"ON"})
-        osci.setup()
+        
+    osci = OSCIemu.OSCI(UI=True)
+    osci.connect_to_device()
+    osci.set_channel(1,{"number":'1',"name":El_osci_3.get(),"probe_ratio":'1',"vertical_scale":El_osci_5.get(),"vertical_unit_name":El_osci_6.get(),"offset":El_osci_8.get(),"offset_unit_name":El_osci_9.get(),"display":"ON"})
+    osci.setup()
 
     ps.setup(float(V_min.get()),1)    
 
@@ -66,54 +112,6 @@ def go_test():
         get_data()
         
 #_______Other function for the UI_____________#
-def pop_amp_command():
-    global recquire_amp,amp_source,Add_amp,El_amp_1,El_amp_2,El_amp_3,El_amp_4,El_amp_5,menu_amp
-    recquire_amp= not recquire_amp  # To do a 'switch function' allowing the on/off of amperemeter
-    if recquire_amp:  # Button on : displaying elements of selection
-        Add_amp.config(text="Nevermind, i don't want it")
-        El_amp_1.grid(column=2,row=12,columnspan=9)
-        El_amp_2.grid(column=2,row=13,columnspan=4)
-        El_amp_3.grid(column=7,row=13,columnspan=4)
-        El_amp_4.grid(column=2,row=14,columnspan=4)
-        El_amp_5.grid(column=7,row=14,columnspan=4)
-        menu_amp.grid(column=0,row=12,columnspan=2,rowspan=3)
-    else:
-        Add_amp.config(text="Amperemeter please !")
-        El_amp_1.grid_forget()
-        El_amp_2.grid_forget()
-        El_amp_3.grid_forget()
-        El_amp_4.grid_forget()
-        El_amp_5.grid_forget()
-        menu_amp.grid_forget()
-
-def pop_osci_command():
-    global recquire_osci,Add_osci,El_osci_1,El_osci_2,El_osci_3,El_osci_4,El_osci_5,El_osci_6,El_osci_7,El_osci_8,El_osci_9
-    recquire_osci = not recquire_osci  # To do a 'switch function' allowing the on/off of amperemeter
-    if recquire_osci:  # Button on : displaying elements of selection
-        Add_osci.config(text="Nevermind, i don't want it")
-        El_osci_1.grid(column=2,row=16)
-        El_osci_2.grid(column=3,row=16)
-        El_osci_3.grid(column=4,row=16)
-        El_osci_4.grid(column=5,row=16)
-        El_osci_5.grid(column=6,row=16)
-        El_osci_6.grid(column=7,row=16)
-        El_osci_7.grid(column=8,row=16)
-        El_osci_8.grid(column=9,row=16)
-        El_osci_9.grid(column=10,row=16)
-        menu_osci.grid(column=0,row=16,columnspan=2,rowspan=3)
-    else:
-        Add_osci.config(text="oscilloscope please !")
-        El_osci_1.grid_forget()
-        El_osci_2.grid_forget()
-        El_osci_3.grid_forget()
-        El_osci_4.grid_forget()
-        El_osci_5.grid_forget()
-        El_osci_6.grid_forget()
-        El_osci_7.grid_forget()
-        El_osci_8.grid_forget()
-        El_osci_9.grid_forget()
-        menu_osci.grid_forget()
-    
 def openlink():
     webbrowser.open('https://hal.science/hal-04663862v1')
         
@@ -162,34 +160,49 @@ Button(root,text='Go !',command=go_test,**default_button_style).grid(column=2,co
 
 #///part for the on/off of amperemeter
 amp_source = StringVar()
-amp_source.set('PV')
-recquire_amp=False
+amp_source.set('PS')
 menu_amp = Label(root,height=menuPPK.height(),width=menuPPK.width(),image=menuPPK)
-Add_amp = Button(root,text="Amperemeter please",command=pop_amp_command,**default_button_style)
-Add_amp.grid(column=0,row=11,columnspan=2)
 El_amp_1 = Label(root,text='Choose amperemeter source',**title_label_style)
-El_amp_2 = Radiobutton(root,variable=amp_source,value='PV',text='Power Source',**default_label_style)
+El_amp_2 = Radiobutton(root,variable=amp_source,value='PS',text='Power Source',**default_label_style)
 El_amp_3 = Radiobutton(root,variable=amp_source,value='PPK',text='Power Profiler',**default_label_style)
 El_amp_4 = Label(root,width=imgPV.width(),height=imgPV.height(),image=imgPV,**default_label_style)
 El_amp_5 = Label(root,width=imgPPK.width(),height=imgPPK.height(),image=imgPPK)
 
-recquire_osci=False
 menu_osci = Label(root,height=menuOSCI.height(),width=menuOSCI.width(),image=menuOSCI)
-Add_osci = Button(root,text="oscilloscope please !",command=pop_osci_command,**default_button_style)
-Add_osci.grid(column=0,row=15,columnspan=2)
 El_osci_1 = Label(root,text='(1)',**title_label_style)
 El_osci_2 = Label(root,text='name :',**default_label_style)
 El_osci_3 = Entry(root,**default_entry_style)
+El_osci_3.insert(END,'Albert')
 El_osci_4 = Label(root,text='Vertical scale :',**default_label_style)
 El_osci_5 = Entry(root,**default_entry_style)
+El_osci_5.insert(END,'2')
 El_osci_6 = ttk.Combobox(root, values=['V','mV'],width=5,state='readonly')
 El_osci_6.current(0)
 El_osci_7 = Label(root,text='offset :',**default_label_style)
 El_osci_8 = Entry(root,**default_entry_style)
+El_osci_8.insert(END,'0')
 El_osci_9 = ttk.Combobox(root, values=['V','mV'],width=5,state='readonly')
 El_osci_9.current(0)
 
+El_amp_1.grid(column=2,row=11,columnspan=9)
+El_amp_2.grid(column=2,row=12,columnspan=4)
+El_amp_3.grid(column=7,row=12,columnspan=4)
+El_amp_4.grid(column=2,row=13,columnspan=4)
+El_amp_5.grid(column=7,row=13,columnspan=4)
+menu_amp.grid(column=0,row=11,columnspan=2,rowspan=3)
+
+El_osci_1.grid(column=2,row=14,rowspan=3)
+El_osci_2.grid(column=3,row=14,rowspan=3)
+El_osci_3.grid(column=4,row=14,rowspan=3)
+El_osci_4.grid(column=5,row=14,rowspan=3)
+El_osci_5.grid(column=6,row=14,rowspan=3)
+El_osci_6.grid(column=7,row=14,rowspan=3)
+El_osci_7.grid(column=8,row=14,rowspan=3)
+El_osci_8.grid(column=9,row=14,rowspan=3)
+El_osci_9.grid(column=10,row=14,rowspan=3)
+menu_osci.grid(column=0,row=14,columnspan=2,rowspan=3)
+        
 Button(root,text='EARLYBIRD project page',bg='blue',fg='white',activebackground="#00FAFF",command=openlink,bd=5).grid(column=2,columnspan=9,row=0)
-Button(root,text='showresults',image=imggraph,compound="right",bg='#A10000',fg='#FFE9E9',bd=5,activebackground="#FF0000",command=showLogs).grid(column=2,columnspan=9,row=28)
+Button(root,text='showresults',image=imggraph,compound="right",bg='#A10000',fg='#FFE9E9',bd=5,activebackground="#FF0000",command=showLogs).grid(column=2,columnspan=9,row=26)
 
 root.mainloop()

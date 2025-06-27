@@ -14,7 +14,7 @@ def preparation(nbpente:int=2):        # nb of back and forward for the tension
     tension = osci.waveforms['albert']
     coup = len(tension)//nbpente
     tensionref = tension[:coup]
-    courant = [el/1000 for el in ppk.log['Iout']] # Conversion from uA to mA
+    courant = [el*1000 for el in ps.log['Iout']] # Conversion from uA to mA
     courant1=[]    # 1 for the incrementation phase
     courant2=[]    # 2 for the decrementation phase
     P = [eli*elu for eli,elu in zip(tension,courant)]
@@ -43,7 +43,7 @@ def showLogs():
     ax1.plot(tension,courant2,ls=':',color='blue')
     ax1.plot(tension,diffc,ls='-',color='black')
     ax1.fill_between(tension,courant1,courant2,color='cyan',alpha=0.2)
-    ax1.set_ylabel('Current in mA')
+    ax1.set_ylabel('Current in mA',color='blue',font=("Courier new", 16,"bold"))
     ax1.axvline(x=1.8,ls=':',color='green')
     ax1.axvline(x=3.3,ls=':',color='green')
 
@@ -52,7 +52,7 @@ def showLogs():
     ax2.plot(tension,P2,ls=':',color='red')
     ax2.plot(tension,diffp,ls='-',color='black')
     ax2.fill_between(tension,P1,P2,color='magenta',alpha=0.2)
-    ax2.set_ylabel('Power in W')
+    ax2.set_ylabel('Power in W',color='red',font=("Courier new", 16,"bold"))
 
     plt.show()
     
